@@ -1,22 +1,27 @@
-﻿namespace BreadFactory.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace BreadFactory.Models
 {
+    [Table("Users")]
     public class User
     {
-        public int Id { get; set; }
+        [Key]
+        public int UserId { get; set; }
+
+        [Required, StringLength(50)]
         public string Username { get; set; }
-        public string Password { get; set; }
-        public string Role { get; set; }
+
+        [Required]
+        public string PasswordHash { get; set; }
+
+        [Required]
+        public string Salt { get; set; }
+
+        [StringLength(100)]
         public string FullName { get; set; }
 
-        public bool IsAdmin => Role == UserRoles.Admin;
-        public bool IsTechnologistOrAdmin => Role == UserRoles.Admin || Role == UserRoles.Technologist;
-        public bool IsOperatorOrHigher => Role == UserRoles.Admin || Role == UserRoles.Technologist || Role == UserRoles.Operator;
-    }
-
-    public static class UserRoles
-    {
-        public const string Admin = "Администратор";
-        public const string Technologist = "Технолог";
-        public const string Operator = "Оператор";
+        [Required, StringLength(50)]
+        public string Role { get; set; }
     }
 }

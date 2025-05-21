@@ -1,7 +1,6 @@
 ﻿using BreadFactory.Models;
+using BreadFactory.Repositories;
 using BreadFactory.Views;
-using System;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -10,24 +9,23 @@ namespace BreadFactory.ViewModels
 {
     public class LoginViewModel : ViewModelBase
     {
-        private readonly Func<string> _getPassword;
+        private readonly UserRepository _userRepo = new UserRepository();
+
         private string _username;
-        private string _errorMessage;
-        private ObservableCollection<User> _users = new ObservableCollection<User>();
-
-        public LoginViewModel(Func<string> getPassword)
-        {
-            _getPassword = getPassword;
-            InitializeTestUsers();
-            LoginCommand = new RelayCommand(Login);
-        }
-
         public string Username
         {
             get => _username;
             set => SetProperty(ref _username, value);
         }
 
+        private string _password;
+        public string Password
+        {
+            get => _password;
+            set => SetProperty(ref _password, value);
+        }
+
+        private string _errorMessage;
         public string ErrorMessage
         {
             get => _errorMessage;
@@ -36,46 +34,34 @@ namespace BreadFactory.ViewModels
 
         public ICommand LoginCommand { get; }
 
-        private void InitializeTestUsers()
+        public LoginViewModel()
         {
-            _users.Add(new User { Id = 1, Username = "admin", Password = "admin123", Role = UserRoles.Admin, FullName = "Иванов А.А." });
-            _users.Add(new User { Id = 2, Username = "tech", Password = "tech123", Role = UserRoles.Technologist, FullName = "Петрова С.И." });
-            _users.Add(new User { Id = 3, Username = "oper", Password = "oper123", Role = UserRoles.Operator, FullName = "Сидоров В.М." });
+            LoginCommand = new RelayCommand(Login, CanLogin);
+        }
+
+        private bool CanLogin(object parameter)
+        {
+            return !string.IsNullOrWhiteSpace(Username) &&
+                   !string.IsNullOrWhiteSpace(Password);
         }
 
         private void Login(object parameter)
         {
             ErrorMessage = string.Empty;
+            var user = _userRepo.Authenticate(Username, Password);
 
-            if (string.IsNullOrWhiteSpace(Username))
+            if (user != null)
             {
-                ErrorMessage = "Введите имя пользователя";
-                return;
-            }
+                var mainWindow = new MainWindow();
+                mainWindow.DataContext = new MainViewModel(user);
+                mainWindow.Show();
 
-            var password = _getPassword();
-            if (string.IsNullOrWhiteSpace(password))
+                Application.Current.Windows.OfType<LoginWindow>().FirstOrDefault()?.Close();
+            }
+            else
             {
-                ErrorMessage = "Введите пароль";
-                return;
+                ErrorMessage = "Неверные учетные данные";
             }
-
-            var user = _users.FirstOrDefault(u =>
-                u.Username.Equals(Username, StringComparison.OrdinalIgnoreCase) &&
-                u.Password == password);
-
-            if (user == null)
-            {
-                ErrorMessage = "Неверное имя пользователя или пароль";
-                return;
-            }
-
-            var mainWindow = new MainWindow();
-            var mainViewModel = new MainViewModel(user);
-            mainWindow.DataContext = mainViewModel;
-
-            mainWindow.Show();
-            Application.Current.Windows.OfType<LoginWindow>().First().Close();
         }
     }
 }
