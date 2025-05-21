@@ -1,6 +1,6 @@
-﻿using BreadFactory.ViewModels;
+﻿using BreadFactory.Repositories;
+using BreadFactory.ViewModels;
 using System.Windows;
-using System.Windows.Controls;
 
 namespace BreadFactory.Views
 {
@@ -9,15 +9,13 @@ namespace BreadFactory.Views
         public LoginWindow()
         {
             InitializeComponent();
-            DataContext = new LoginViewModel();
-        }
 
-        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is LoginViewModel vm)
-            {
-                vm.Password = ((PasswordBox)sender).Password;
-            }
+            // Создаем экземпляр контекста и репозитория
+            var context = new Data.BreadFactoryContext();
+            var userRepository = new Repositories.UserRepository(context);
+
+            // Передаем репозиторий в ViewModel
+            DataContext = new LoginViewModel(userRepository);
         }
     }
 }

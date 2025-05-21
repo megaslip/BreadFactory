@@ -4,24 +4,31 @@ using System.Linq;
 
 namespace BreadFactory.Repositories
 {
-    public class UserRepository
+    public interface IUserRepository
     {
-        public User Authenticate(string username, string password)
+        User GetUser(string username, string password);
+        void AddUser(User user);
+    }
+
+    public class UserRepository : IUserRepository
+    {
+        private readonly BreadFactoryContext _context;
+
+        public UserRepository(BreadFactoryContext context)
         {
-            using (var context = new BreadFactoryContext())
-            {
-                var user = context.Users
-                    .FirstOrDefault(u => u.Username == username);
+            _context = context;
+        }
 
-                if (user == null)
-                    return null;
+        public User GetUser(string username, string password)
+        {
+            return _context.Users
+                .FirstOrDefault(u => u.Username == username && u.Password == password);
+        }
 
-                // В реальном приложении добавьте проверку пароля:
-                // if (!VerifyPassword(password, user.PasswordHash, user.Salt))
-                //     return null;
-
-                return user;
-            }
+        public void AddUser(User user)
+        {
+            _context.Users.Add(user);
+            _context.SaveChanges();
         }
     }
 }

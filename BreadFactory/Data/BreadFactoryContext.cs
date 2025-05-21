@@ -1,29 +1,27 @@
-﻿using BreadFactory.Models;
-using System.Collections.Generic;
+﻿using BreadFactory.Data.Initializer;
+using BreadFactory.Data.Models;
+using BreadFactory.Models;
 using System.Data.Entity;
-using System.Runtime.Remoting.Contexts;
 
 namespace BreadFactory.Data
 {
     public class BreadFactoryContext : DbContext
     {
-        public BreadFactoryContext() : base("name=BreadFactoryDB")
-        {
-            Configuration.LazyLoadingEnabled = false;
-        }
-
         public DbSet<User> Users { get; set; }
-        public DbSet<Product> Products { get; set; }
         public DbSet<Recipe> Recipes { get; set; }
         public DbSet<Ingredient> Ingredients { get; set; }
+
+        public BreadFactoryContext() : base("name=BreadFactoryContext")
+        {
+            Database.SetInitializer(new DatabaseInitializer());
+        }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Recipe>()
-                .HasRequired(r => r.Product)
-                .WithMany()
-                .HasForeignKey(r => r.ProductId)
-                .WillCascadeOnDelete(false);
+                .HasMany(r => r.Ingredients)
+                .WithRequired(i => i.Recipe)
+                .HasForeignKey(i => i.RecipeId);
         }
     }
 }

@@ -1,4 +1,7 @@
-﻿using BreadFactory.Models;
+﻿using BreadFactory.Data.Models;
+using BreadFactory.Models;
+using System;
+using System.Collections.Generic;
 using System.Data.Entity;
 
 namespace BreadFactory.Data.Initializer
@@ -7,20 +10,30 @@ namespace BreadFactory.Data.Initializer
     {
         protected override void Seed(BreadFactoryContext context)
         {
-            var products = new[]
+            // Добавляем тестового пользователя
+            context.Users.Add(new User
             {
-                new Product { Name = "Белый хлеб", Weight = 0.5m, ProductionTime = 120, Cost = 30.0m },
-                new Product { Name = "Ржаной хлеб", Weight = 0.7m, ProductionTime = 180, Cost = 45.0m }
+                Username = "admin",
+                Password = "admin123",
+                Role = "Admin"
+            });
+
+            // Добавляем тестовые рецепты
+            var recipe = new Recipe
+            {
+                Name = "Белый хлеб",
+                TargetProduct = "Хлеб белый",
+                Instructions = "1. Замесить тесто...",
+                Duration = TimeSpan.FromHours(2),
+                Ingredients = new List<Ingredient>
+                {
+                    new Ingredient { Name = "Мука", Quantity = 1, Unit = "кг" },
+                    new Ingredient { Name = "Вода", Quantity = 0.5, Unit = "л" }
+                }
             };
 
-            var users = new[]
-            {
-                new User { Username = "admin", PasswordHash = "AQAAAAIAAYagAAAAEE...", Salt = "salt", Role = "Admin" }
-            };
-
-            context.Products.AddRange(products);
-            context.Users.AddRange(users);
-            context.SaveChanges();
+            context.Recipes.Add(recipe);
+            base.Seed(context);
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using BreadFactory.Models;
-using BreadFactory.Repositories;
+﻿using BreadFactory.Repositories;
 using BreadFactory.Views;
 using System.Linq;
 using System.Windows;
@@ -7,60 +6,36 @@ using System.Windows.Input;
 
 namespace BreadFactory.ViewModels
 {
-    public class LoginViewModel : ViewModelBase
+    public class LoginViewModel
     {
-        private readonly UserRepository _userRepo = new UserRepository();
+        private readonly IUserRepository _userRepository;
 
-        private string _username;
-        public string Username
-        {
-            get => _username;
-            set => SetProperty(ref _username, value);
-        }
-
-        private string _password;
-        public string Password
-        {
-            get => _password;
-            set => SetProperty(ref _password, value);
-        }
-
-        private string _errorMessage;
-        public string ErrorMessage
-        {
-            get => _errorMessage;
-            set => SetProperty(ref _errorMessage, value);
-        }
+        public string Username { get; set; }
+        public string Password { get; set; }
 
         public ICommand LoginCommand { get; }
 
-        public LoginViewModel()
+        public LoginViewModel(IUserRepository userRepository)
         {
-            LoginCommand = new RelayCommand(Login, CanLogin);
+            _userRepository = userRepository;
+            LoginCommand = new RelayCommand(_ => Login());
         }
 
-        private bool CanLogin(object parameter)
+        private void Login()
         {
-            return !string.IsNullOrWhiteSpace(Username) &&
-                   !string.IsNullOrWhiteSpace(Password);
-        }
-
-        private void Login(object parameter)
-        {
-            ErrorMessage = string.Empty;
-            var user = _userRepo.Authenticate(Username, Password);
-
+            var user = _userRepository.GetUser(Username, Password);
             if (user != null)
             {
                 var mainWindow = new MainWindow();
-                mainWindow.DataContext = new MainViewModel(user);
+                mainWindow.DataContext = new MainViewModel(_userRepository);
                 mainWindow.Show();
 
+                // Закрываем текущее окно
                 Application.Current.Windows.OfType<LoginWindow>().FirstOrDefault()?.Close();
             }
             else
             {
-                ErrorMessage = "Неверные учетные данные";
+                MessageBox.Show("Неверные учетные данные", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
