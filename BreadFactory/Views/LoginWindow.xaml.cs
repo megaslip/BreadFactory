@@ -1,6 +1,6 @@
-﻿using BreadFactory.Repositories;
+﻿using System.Windows;
+using System.Windows.Controls;
 using BreadFactory.ViewModels;
-using System.Windows;
 
 namespace BreadFactory.Views
 {
@@ -9,13 +9,34 @@ namespace BreadFactory.Views
         public LoginWindow()
         {
             InitializeComponent();
+            DataContext = new LoginViewModel(); // Установка ViewModel
+        }
 
-            // Создаем экземпляр контекста и репозитория
-            var context = new Data.BreadFactoryContext();
-            var userRepository = new Repositories.UserRepository(context);
+        // Обработчик изменения пароля (связь с ViewModel)
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is LoginViewModel viewModel)
+            {
+                viewModel.Password = ((PasswordBox)sender).Password;
+            }
+        }
 
-            // Передаем репозиторий в ViewModel
-            DataContext = new LoginViewModel(userRepository);
+        // Обработчик кнопки входа (можно добавить логику аутентификации)
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is LoginViewModel viewModel)
+            {
+                if (viewModel.Authenticate()) // Проверка логина/пароля
+                {
+                    MainWindow mainWindow = new MainWindow();
+                    mainWindow.Show();
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("Неверный логин или пароль", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
     }
 }

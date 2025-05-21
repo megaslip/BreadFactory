@@ -1,42 +1,44 @@
-﻿using BreadFactory.Repositories;
-using BreadFactory.Views;
-using System.Linq;
-using System.Windows;
-using System.Windows.Input;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace BreadFactory.ViewModels
 {
-    public class LoginViewModel
+    public class LoginViewModel : INotifyPropertyChanged
     {
-        private readonly IUserRepository _userRepository;
+        private string _login;
+        private string _password;
 
-        public string Username { get; set; }
-        public string Password { get; set; }
-
-        public ICommand LoginCommand { get; }
-
-        public LoginViewModel(IUserRepository userRepository)
+        public string Login
         {
-            _userRepository = userRepository;
-            LoginCommand = new RelayCommand(_ => Login());
+            get => _login;
+            set
+            {
+                _login = value;
+                OnPropertyChanged();
+            }
         }
 
-        private void Login()
+        public string Password
         {
-            var user = _userRepository.GetUser(Username, Password);
-            if (user != null)
+            get => _password;
+            set
             {
-                var mainWindow = new MainWindow();
-                mainWindow.DataContext = new MainViewModel(_userRepository);
-                mainWindow.Show();
+                _password = value;
+                OnPropertyChanged();
+            }
+        }
 
-                // Закрываем текущее окно
-                Application.Current.Windows.OfType<LoginWindow>().FirstOrDefault()?.Close();
-            }
-            else
-            {
-                MessageBox.Show("Неверные учетные данные", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+        // Простая проверка аутентификации (замените на реальную логику!)
+        public bool Authenticate()
+        {
+            return !string.IsNullOrEmpty(Login) && !string.IsNullOrEmpty(Password);
+            // Пример: Login == "admin" && Password == "12345"
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
